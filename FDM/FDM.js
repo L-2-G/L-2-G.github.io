@@ -431,8 +431,34 @@ _jet_data = {'red':   ((0.00, 0, 0),
 
 */
 
-
-
+function smallcap(){
+    V.delete()
+    mutable.delete()
+    V = zeros([SIZE,SIZE]);
+    mutable=ones([SIZE,SIZE]);
+    for (var j=184;j<SIZE-184;j++){
+        mutable[184][j]=0;
+        mutable[SIZE-185][j]=0;
+        V[184][j]=1;
+        V[SIZE-185][j]=-1;
+    }
+    mutable=togpu(mutable)
+    V = togpu(V);
+}
+function bigcap(){
+    V.delete()
+    mutable.delete()
+    V = zeros([SIZE,SIZE]);
+    mutable=ones([SIZE,SIZE]);
+    for (var j=0;j<SIZE;j++){
+        mutable[0][j]=0;
+        mutable[SIZE-1][j]=0;
+        V[0][j]=1;
+        V[SIZE-1][j]=-1;
+    }
+    mutable=togpu(mutable)
+    V = togpu(V);
+}
 
 
 
@@ -440,6 +466,7 @@ const $ = q => document.getElementById(q);
 var kT = 2.269
 var mew = 0.0;
 var toggle=false;
+var toggle2=false;
 var kval1=100;
 var kval2=100;
 var N = 0;
@@ -478,6 +505,11 @@ $("kT").oninput = function() {
 $("PlotV").oninput = function(){
 toggle = !toggle;
 }
+$("SmallC").oninput = function(){
+toggle2 = !toggle2;
+    if (toggle2){smallcap()} else{bigcap()}
+}
+
 function nextVoltage(steps,eps){
 for (var i=0;i<steps;i++){
     V2= SOR(V,p,eps,mutable,w,H,0,SIZE)
@@ -552,13 +584,6 @@ for (var j=0;j<SIZE;j++){
     V[SIZE-1][j]=-1;
 }
 
-/*
-for (var j=184;j<SIZE-184;j++){
-    mutable[184][j]=0;
-    mutable[SIZE-185][j]=0;
-    V[184][j]=1;
-    V[SIZE-185][j]=-1;
-}*/
 
 
 mutable=togpu(mutable)

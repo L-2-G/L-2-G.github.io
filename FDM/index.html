@@ -135,9 +135,11 @@
           </style>
           <div class="topnav">
               <a href="/">Home</a>
-              <a class="active" href="/GPUIsing">Ising</a>
+              <a href="/GPUIsing">Ising</a>
               <a href="/Clustering">Clustering</a>
               <a href="/DNAGrowth">DNAGrowth</a>
+              <a class="active" href="/FDM">FDM</a>
+              
           </div>  
           <div class="canvascontainer">
               <canvas id="grid" width=512 height=512></canvas>
@@ -150,7 +152,7 @@
           <input type="range" min="-80" max="80" value="0" class="slider" id="mew">
           Cell Updates Per Frame: <span id="stepstext">10 x</span>      (<span id="stepmeter">0</span>)<br>
           <input type="range" min="-1" max="8" value="-1" class="slider" id="steps">
-          Plot Voltage: <input type="checkbox" id="PlotV"><br>
+          Plot Voltage: <input type="checkbox" id="PlotV">Small Capacitor:<input type="checkbox" id="SmallC"><br>
           <button type="button" id = "stopbutton"><span id="stoptext">Start</span></button>
           </div>   
         
