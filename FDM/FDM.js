@@ -231,7 +231,7 @@ return a[this.thread.y][this.thread.x];
 },{output: [SIZE, SIZE],pipeline: true,immutable: true})
 
 const toperm = gpu.createKernel(function(a) {
-return 6-4*a[this.thread.y][this.thread.x];
+return 3-2*a[this.thread.y][this.thread.x];
 },{output: [SIZE, SIZE],pipeline: true})
 
 const SOR = gpu.createKernel(function(V,p,eps,mutable,w,h,parity,size) {
@@ -367,7 +367,7 @@ const Emap = gpu.createKernel(function(Ex,Ey,M,maxarr,minarr,avg,variance,amax) 
     //rj=(Math.floor(j/R/2+i1%3-1)*2*R+R)%512
         
     //vector representing the field arrow
-    let dx=-(R-7)*Ex[ri][rj]/amax[0][0]
+    let dx=(R-7)*Ex[ri][rj]/amax[0][0]
     let dy=(R-7)*Ey[ri][rj]/amax[0][0]
     let m=(R-7)*(M[ri][rj])/amax[0][0]
     let hs=m>3.5?3.5:m
@@ -504,10 +504,12 @@ $("kT").oninput = function() {
 }
 $("PlotV").oninput = function(){
 toggle = !toggle;
+run()
 }
 $("SmallC").oninput = function(){
 toggle2 = !toggle2;
-    if (toggle2){smallcap()} else{bigcap()}
+if (toggle2){smallcap()} else{bigcap()}
+run()
 }
 
 function nextVoltage(steps,eps){
@@ -538,7 +540,7 @@ function run(){
     
     toperm(grid);
     nextVoltage(400,eps);
-    if (!toggle){
+    if (toggle){
     Erender(ctx2,V);
     }
     else{Vmap(ctx2,getval(V));}
