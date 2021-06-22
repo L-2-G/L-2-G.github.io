@@ -23,7 +23,7 @@ function random_ones(dim,arr,N){
     }
  }
 }
-
+console.log(1.000000000001,"A"+"B")
 const gpu = new GPU();
 
 const SIZE = 256;
@@ -80,10 +80,12 @@ const choose_perm = gpu.createKernel(function(grid,bonds,JB,perm,ip,jp,nspins,s)
     //inner
     newbonds+= bonds[a22][a23]+bonds[a22][a32]+bonds[a33][a32]+bonds[a33][a23]
     
-    let delta = newbonds-oldbonds//change this
+    let delta = newbonds-oldbonds
     //update rule for MCMC
     //I have very little trust in the GPU Math.random function
-    if(delta < 0 || 1-Math.random()<Math.exp(-JB*delta)){
+    
+    //forcing super unlikely things to not happen   1.000000000001
+    if(delta < 0 || 1.0-Math.random()<Math.exp(-JB*delta)){
     returnval=mutate
     }
 
@@ -267,7 +269,7 @@ const make_symmetric = gpu.createKernel(function(arr){
 }, {
         output: [NSPINS, NSPINS],
         pipeline: true,
-        immutable: true
+        //immutable: true
 });
 
 const outputinter = gpu.createKernel(function(a) {
@@ -276,7 +278,7 @@ return a[this.thread.y][this.thread.x];
 
 
 
-const bonds = make_symmetric(random_new_uniform())
+let bonds = make_symmetric(random_new_uniform())//([[-1,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]])
 const COLOURS=[[255,0,0],[0,255,0],[0,0,255],[255,50,255]]
 console.log(outputinter(bonds))
 
@@ -301,6 +303,60 @@ var N = 0;
 var stepsperframe=1;
 var startTime = 0;
 var on = false;
+
+function setbonds(){
+    sv=["A","B","C","D"]
+    newbonds=outputinter(bonds)
+        for (var i=0;i<4;i++){
+            for (var j=0;j<=i;j++){
+            newbonds[i][j]=parseFloat($(sv[i]+sv[j]).value)
+            }
+        }
+    make_symmetric(newbonds)
+}
+
+
+function rescale (S1,S2,S3,fill) {
+    v1=parseFloat($(S1).value)
+    v2=parseFloat($(S2).value)
+    v3=parseFloat($(S3).value)
+    sum=v1+v2+v3
+    if (sum==0){
+    $(S1).value=$(S3).value=$(S2).value=fill/3
+    }
+    else{
+    //console.log(fill,sum,fill/sum)
+    v1*=fill/sum
+    v2*=fill/sum
+    v3*=fill/sum
+    $(S1).value=sum=v1
+    $(S2).value=sum=v2
+    $(S3).value=sum=v3
+    }
+    
+    $(S1+'txt').innerHTML = $(S1).value
+    $(S2+'txt').innerHTML = $(S2).value
+    $(S3+'txt').innerHTML = $(S3).value
+}
+$("A").oninput = function() {
+ $('Atxt').innerHTML = this.value
+ rescale('B','C','D',100-parseFloat(this.value))
+}
+$("B").oninput = function() {
+ $('Btxt').innerHTML = this.value
+ rescale('A','C','D',100-parseFloat(this.value))
+}
+$("C").oninput = function() {
+ $('Ctxt').innerHTML = this.value
+ rescale('B','A','D',100-parseFloat(this.value))
+}
+$("D").oninput = function() {
+ $('Dtxt').innerHTML = this.value
+ rescale('B','C','A',100-parseFloat(this.value))
+}
+
+
+
 $("steps").oninput = function() {
   stepsperframe=Math.pow(4,this.value)*2;
   if (this.value>=0){
@@ -314,15 +370,61 @@ $('stopbutton').addEventListener("click", function(){
     on = !on;
     $('stoptext').innerHTML=on? 'Stop':'Start';
     if (on){
+        console.log(Math.exp(-1/kT))
+        console.log(count_type(0),count_type(1),count_type(2),count_type(3))
         window.requestAnimationFrame(run);
     }
 })
 
-$("mew").oninput = function() {
-  return
-  mew = Math.pow(this.value,3)/25000.0;
-  $('mewtext').innerHTML = mew.toFixed(5);
+function count_type(type){
+    sum=0
+    for(var i=0;i<SIZE;i++){
+        for(var j=0;j<SIZE;j++){
+            if(grid[i][j]==type){
+            sum++
+            }
+
+        }
+    }
+    return sum
+
 }
+
+
+//4 spins is hard coded into here right now
+$('applybutton').addEventListener("click", function(){
+    if (!on||true){
+        grid = zeros([SIZE,SIZE]);
+        v0=parseFloat($('A').value) 
+        v1=parseFloat($('B').value)
+        v2=parseFloat($('C').value)
+        v3=parseFloat($('D').value)
+        tot=v0+v1+v2+v3
+        if (tot>0){
+            //console.log(tot)
+            nums=[v0/tot*SIZE*SIZE,v1/tot*SIZE*SIZE,v2/tot*SIZE*SIZE,v3/tot*SIZE*SIZE]
+            //console.log(nums)
+            for(var i=0;i<SIZE;i++){
+                for(var j=0;j<SIZE;j++){
+                    choice= Math.random()
+                    sum=nums[0]+nums[1]+nums[2]+nums[3]
+                    x0=0
+                    for (var k=0;k<4 && sum>0;k++){
+                        x0+=nums[k]/sum
+                        if (choice<x0){
+                        nums[k]-=1
+                        grid[i][j]=k
+                        break
+                        }
+                    }
+                
+                }
+            }
+        }
+        setbonds()
+        setpixels(ctx,grid)
+    }
+})
     
 
 $("kT").oninput = function() {
@@ -337,7 +439,7 @@ function run(){
     ip=Math.floor(Math.random()*4)
     jp=Math.floor(Math.random()*4)
     choose_perm(grid,bonds,1/kT,PERM,ip,jp,NSPINS,SIZE)
-    grid2 = finalize(grid,choices,INVPERM,ip,jp,SIZE) 
+    grid2 = finalize(grid,choices,PERM,ip,jp,SIZE) 
     
     
     //setpixels(ctx,getval(grid2));
@@ -347,7 +449,7 @@ function run(){
     ip=Math.floor(Math.random()*4)
     jp=Math.floor(Math.random()*4)
     choose_perm(grid2,bonds,1/kT,PERM,ip,jp,NSPINS,SIZE)
-    grid = finalize(grid2,choices,INVPERM,ip,jp,SIZE) 
+    grid = finalize(grid2,choices,PERM,ip,jp,SIZE) 
     //n = Math.random()<=0.5?0:1
     //grid2 = Propose(grid,bonds,1/kT,mew,n,NSPINS,SIZE)
     //grid = Propose(grid2,bonds,1/kT,mew,1-n,NSPINS,SIZE)
@@ -357,19 +459,19 @@ function run(){
         ip=Math.floor(Math.random()*4)
         jp=Math.floor(Math.random()*4)
         choose_perm(grid,bonds,1/kT,PERM,ip,jp,NSPINS,SIZE)
-        grid2 = finalize(grid,choices,INVPERM,ip,jp,SIZE) 
+        grid2 = finalize(grid,choices,PERM,ip,jp,SIZE) 
         grid.delete()
         
         ip=Math.floor(Math.random()*4)
         jp=Math.floor(Math.random()*4)
         choose_perm(grid2,bonds,1/kT,PERM,ip,jp,NSPINS,SIZE)
-        grid = finalize(grid2,choices,INVPERM,ip,jp,SIZE) 
+        grid = finalize(grid2,choices,PERM,ip,jp,SIZE) 
         grid2.delete()
     }
     ip=Math.floor(Math.random()*4)
     jp=Math.floor(Math.random()*4)
     choose_perm(grid,bonds,1/kT,PERM,ip,jp,NSPINS,SIZE)
-    grid2 = finalize(grid,choices,INVPERM,ip,jp,SIZE) 
+    grid2 = finalize(grid,choices,PERM,ip,jp,SIZE) 
     grid.delete()
     
     grid = getval(grid2);
