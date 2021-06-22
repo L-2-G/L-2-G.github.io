@@ -403,9 +403,7 @@ function count_type(type){
 
 }
 
-
-//4 spins is hard coded into here right now
-$('applybutton').addEventListener("click", function(){
+function setlevels(){
     if (!on||true){
         grid = zeros([SIZE,SIZE]);
         v0=parseFloat($('A').value) 
@@ -434,9 +432,15 @@ $('applybutton').addEventListener("click", function(){
                 }
             }
         }
+    }
+}
+
+//4 spins is hard coded into here right now
+$('applybutton').addEventListener("click", function(){
+        setlevels()
         setbonds()
         setpixels(ctx,grid)
-    }
+    
 })
     
 
@@ -502,7 +506,8 @@ function run(){
 
 INDX=0
 grid = zeros([SIZE,SIZE]);
-random_ones([SIZE,SIZE],grid,SIZE*SIZE*1/2)
+setlevels()
+//random_ones([SIZE,SIZE],grid,SIZE*SIZE*1/2)
 stepsperframe=Math.pow(2,-1)*2;
 $('stepstext').innerHTML = "1/"+Math.pow(4,1);
 var RGBData;
