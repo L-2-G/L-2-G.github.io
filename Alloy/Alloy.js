@@ -327,7 +327,7 @@ $("mew").oninput = function() {
 
 $("kT").oninput = function() {
   x = Math.pow((this.value/32),3)+0.8194
-  kT = Math.exp(x)*0.1;
+  kT = Math.exp(x)*0.05;
   $('kTtext').innerHTML = kT.toFixed(3);
   //console.log(kT);
 }
