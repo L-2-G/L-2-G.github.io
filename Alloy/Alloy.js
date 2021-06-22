@@ -277,8 +277,30 @@ return a[this.thread.y][this.thread.x];
 }).setOutput([NSPINS, NSPINS])
 
 
+function setbonds(){
+    sv=["A","B","C","D"]
+    newbonds=outputinter(bonds)
+        for (var i=0;i<4;i++){
+            for (var j=0;j<=i;j++){
+            newbonds[i][j]=parseFloat($(sv[i]+sv[j]).value)
+            }
+        }
+    make_symmetric(newbonds)
+}
+
+function setbondstext(){
+    sv=["A","B","C","D"]
+    newbonds=outputinter(bonds)
+        for (var i=0;i<4;i++){
+            for (var j=0;j<=i;j++){
+            $(sv[i]+sv[j]).value = newbonds[i][j]
+            }
+        }
+}
+
 
 let bonds = make_symmetric(random_new_uniform())//([[-1,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]])
+setbondstext()
 const COLOURS=[[255,0,0],[0,255,0],[0,0,255],[255,50,255]]
 console.log(outputinter(bonds))
 
@@ -304,16 +326,7 @@ var stepsperframe=1;
 var startTime = 0;
 var on = false;
 
-function setbonds(){
-    sv=["A","B","C","D"]
-    newbonds=outputinter(bonds)
-        for (var i=0;i<4;i++){
-            for (var j=0;j<=i;j++){
-            newbonds[i][j]=parseFloat($(sv[i]+sv[j]).value)
-            }
-        }
-    make_symmetric(newbonds)
-}
+
 
 
 function rescale (S1,S2,S3,fill) {
