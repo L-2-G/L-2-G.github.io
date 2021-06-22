@@ -293,7 +293,7 @@ function setbondstext(){
     newbonds=outputinter(bonds)
         for (var i=0;i<4;i++){
             for (var j=0;j<=i;j++){
-            $(sv[i]+sv[j]).value = newbonds[i][j]
+            $(sv[i]+sv[j]).value = Math.round(newbonds[i][j]*100)/100
             }
         }
 }
