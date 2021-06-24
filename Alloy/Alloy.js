@@ -299,7 +299,7 @@ function setbondstext(){
 }
 
 
-let bonds = make_symmetric(random_new_uniform())//([[-1,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]])
+let bonds = make_symmetric([[-1,0,0,0],[0,0,0,0],[0,-1,0,0],[1,0,0,-1]])//(random_new_uniform())
 setbondstext()
 const COLOURS=[[255,0,0],[0,255,0],[0,0,255],[255,50,255]]
 console.log(outputinter(bonds))
@@ -383,6 +383,9 @@ $('stopbutton').addEventListener("click", function(){
     on = !on;
     $('stoptext').innerHTML=on? 'Stop':'Start';
     if (on){
+        setlevels()
+        setbonds()
+        setpixels(ctx,grid)
         console.log(Math.exp(-1/kT))
         console.log(count_type(0),count_type(1),count_type(2),count_type(3))
         window.requestAnimationFrame(run);
@@ -445,8 +448,8 @@ $('applybutton').addEventListener("click", function(){
     
 
 $("kT").oninput = function() {
-  x = Math.pow((this.value/32),3)+0.8194
-  kT = Math.exp(x)*0.05;
+  x = Math.pow((this.value/32),3)
+  kT = Math.exp(x);
   $('kTtext').innerHTML = kT.toFixed(3);
   //console.log(kT);
 }

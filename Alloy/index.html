@@ -57,6 +57,21 @@
               width: 512px;
               margin: auto;
             }
+            .topcontainer {
+              display: flex;
+              width: 752px;
+              margin: auto;
+              height=512px
+            }
+            .sidecontainer {
+              display: inline-block;
+              *display: inline;
+              zoom: 1; 
+              vertical-align: top; 
+              font-size: 16px;
+              width: 120px;
+              height=100%
+            }
 
             .slider {
               /*-webkit-appearance: none;*/
@@ -69,7 +84,18 @@
               -webkit-transition: .2s;
               transition: opacity .2s;
             }
-            
+            .vertslider{
+                writing-mode: bt-lr; /* IE */
+                -webkit-appearance: slider-vertical; /* WebKit */
+                width: 15px;
+                height: 490px;
+                padding: 0 24px;
+                background: #d3d3d3;
+                outline: none;
+                opacity: 0.7;
+                -webkit-transition: .2s;
+                transition: opacity .2s;
+            }
             
             .range-slider_flat {
               width: 512px; /* Width of the outside container */
@@ -127,7 +153,6 @@
             .slider2{
             width:92%
             }
-   
           </style>
           <div class="topnav">
               <a href="/">Home</a>
@@ -137,35 +162,41 @@
               <a href="/FDM">FDM</a>
               <a class="active" href="/Alloy">Alloy</a>
           </div>  
-          
-          <div class="slidecontainer">
-          <canvas id="grid" width=512 height=512></canvas>
-          Temperature: <span id="kTtext">0.113</span><br>
-          <input type="range" min="-50" max="50" value="0" class="slider" id="kT">
-          %A: <span id="Atxt">25</span><br>
-          <input type="range" min="0" max="100" value="25" class="slider" id="A">
-          %B: <span id="Btxt">25</span><br>
-          <input type="range" min="0" max="100" value="25" class="slider" id="B">
-          %C: <span id="Ctxt">25</span><br>
-          <input type="range" min="0" max="100" value="25" class="slider" id="C">
-          %D: <span id="Dtxt">25</span><br>
-          <input type="range" min="0" max="100" value="25" class="slider" id="D">
-          Cell Updates Per Frame: <span id="stepstext">10 x</span>      (<span id="stepmeter">0</span>)<br>
-          <input type="range" min="-1" max="8" value="-1" class="slider" id="steps">
+          <div class='topcontainer'>
+              <div class='sidecontainer'>
+                  %A: <span id="Atxt">25</span>
+                  %B: <span id="Btxt">25</span><br>
+                  <input type="range" min="0" max="100" value="25" class="vertslider" id="A">
+                  <input type="range" min="0" max="100" value="25" class="vertslider" id="B">
+              </div>
 
-              
-          <input id="AA" type="text" size="5"><br>
-          <input id="BA" type="text" size="5">  
+                  <canvas id="grid" width=512 height=512></canvas>
+
+              <div class='sidecontainer'>
+                  %C: <span id="Ctxt">25</span>
+                  %D: <span id="Dtxt">25</span><br>
+                  <input type="range" min="0" max="100" value="25" class="vertslider" id="C">
+                  <input type="range" min="0" max="100" value="25" class="vertslider" id="D">
+              </div>
+          </div>
+          <div class="slidecontainer">
+          Bond strengths: <br>
+          A<input id="AA" type="text" size="5"><br>
+          B<input id="BA" type="text" size="5">  
           <input id="BB" type="text" size="5"><br>  
-          <input id="CA" type="text" size="5">
+          C<input id="CA" type="text" size="5">
           <input id="CB" type="text" size="5">
-          <input id="CC" type="text" size="5"><br>  
-          <input id="DA" type="text" size="5">  
-          <input id="DB" type="text" size="5">
-          <input id="DC" type="text" size="5">
-          <input id="DD" type="text" size="5">  
+          <input id="CC" type="text" size="5">
           <button type="button" id = "stopbutton"><span id="stoptext">Start</span></button>
           <button type="button" id = "applybutton"><span id="stoptext">Apply</span></button><br>
+          D<input id="DA" type="text" size="5">  
+          <input id="DB" type="text" size="5">
+          <input id="DC" type="text" size="5">
+          <input id="DD" type="text" size="5"><br>
+          Temperature: <span id="kTtext">1.000</span><br>
+          <input type="range" min="-50" max="50" value="0" class="slider" id="kT">
+          Cell Updates Per Frame: <span id="stepstext">10 x</span>      (<span id="stepmeter">0</span>)<br>
+          <input type="range" min="-1" max="8" value="-1" class="slider" id="steps">
           </div>   
 
         
