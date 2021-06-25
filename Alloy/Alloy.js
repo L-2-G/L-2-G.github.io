@@ -350,6 +350,9 @@ function rescale (S1,S2,S3,fill) {
     $(S1+'txt').innerHTML = $(S1).value
     $(S2+'txt').innerHTML = $(S2).value
     $(S3+'txt').innerHTML = $(S3).value
+    
+    rebalance()
+    setpixels(ctx,grid);
 }
 $("A").oninput = function() {
  $('Atxt').innerHTML = this.value
@@ -383,7 +386,7 @@ $('stopbutton').addEventListener("click", function(){
     on = !on;
     $('stoptext').innerHTML=on? 'Stop':'Start';
     if (on){
-        setlevels()
+        //setlevels()
         setbonds()
         setpixels(ctx,grid)
         console.log(Math.exp(-1/kT))
@@ -403,7 +406,61 @@ function count_type(type){
         }
     }
     return sum
+}
 
+//only works with 4 types right now
+function positions(){
+    pos=[[],[],[],[]];
+    for(var i=0;i<SIZE;i++){
+        for(var j=0;j<SIZE;j++){
+            pos[grid[i][j]].push(i*SIZE+j)
+        }
+    }
+    return pos
+}
+
+function rebalance(){
+    pos=positions()
+    v0=parseFloat($('A').value) 
+    v1=parseFloat($('B').value)
+    v2=parseFloat($('C').value)
+    v3=parseFloat($('D').value)
+    tot=v0+v1+v2+v3
+    if (tot>0){
+        diffs=[v0/tot*SIZE*SIZE-pos[0].length,v1/tot*SIZE*SIZE-pos[1].length
+              ,v2/tot*SIZE*SIZE-pos[2].length,v3/tot*SIZE*SIZE-pos[3].length]   
+        nums=[]
+        for(var i=0;i<4;i++){nums.push(diffs[i]>0?diffs[i]:0)}
+        //console.log(diffs,nums)
+        //console.log(nums[0]+nums[1]+nums[2]+nums[3])
+        //fast until here 
+        
+        idx=0
+        for(var i=0;i<4;i++){
+            
+            for (var j=0;j<-diffs[i];j++){
+                idx+=1
+                index= Math.floor(Math.random()*(pos[i].length-j))
+                //can also use pos[i].pop()
+                tmp = pos[i][pos[i].length-j-1]
+                val=pos[i][index]
+                pos[i][index]=tmp
+
+                choice= Math.random()
+                sum=nums[0]+nums[1]+nums[2]+nums[3]
+                x0=0
+                for (var k=0;k<4 && sum>0;k++){
+                    x0+=nums[k]/sum
+                    if (choice<x0){
+                        nums[k]-=1
+                        grid[Math.floor(val/SIZE)][val%SIZE]=k
+                        break
+                    }
+                }
+            }
+        }
+        //console.log(idx)
+    }
 }
 
 function setlevels(){
@@ -528,6 +585,7 @@ var canvas = document.getElementById('grid');
 console.log(canvas);
 ctx = canvas.getContext("2d");
 
+setlevels()
 setpixels(ctx,grid)
 
 //window.requestAnimationFrame(run)
