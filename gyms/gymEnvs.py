@@ -12,8 +12,10 @@ from gym import spaces
 #import pickle
 #import copy
 
-
-
+#Supress warning for gpu utilization on small Ising system sizes (they don't use much gpu at all)
+import warnings
+from numba.cuda.dispatcher import NumbaPerformanceWarning
+warnings.simplefilter('ignore', category=NumbaPerformanceWarning)
 
 def to_rgb(x):
   """Converts a 4-channel rgba image into a 3-channel rgb image"""
