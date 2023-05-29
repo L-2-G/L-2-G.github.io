@@ -1,4 +1,4 @@
-const gpu = new GPU();
+const gpu = new GPU.GPU();
 console.log(Math.log(2))
 //stole this recursive thing but gonna make not recursive
 function zeros(dimensions) {

@@ -36,7 +36,7 @@ function random_ones(dim,arr,N){
  }
 }
 
-const gpu = new GPU();
+const gpu = new GPU.GPU();
 
 //going to do max test reductions
 
@@ -123,11 +123,12 @@ return (a[this.thread.y][this.thread.x]-avg[0][0])**2;
 },{output: [512, 512],pipeline: true})
 
 
-testarr = random_arr(0.5)
+let testarr = random_arr(0.5)
 
-testarrgpu=togpularge(testarr)
+let testarrgpu=togpularge(testarr)
 var startTime=(new Date()).getTime()
 
+var max;
 for (var i=0;i<1000;i++){
 max = cpumax(testarr)
 }
