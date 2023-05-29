@@ -9,32 +9,32 @@ function zeros(dimensions) {
         }
         array.push(arr2);
     }
-
+  
     return array;
-}
-
-function random_ones(dim,arr,N){
- for(var i=0;i<N;){ 
-    x=Math.floor(Math.random() * dim[0]);
-    y=Math.floor(Math.random() * dim[1]);
+  }
+  
+  function random_ones(dim,arr,N){
+  for(var i=0;i<N;){ 
+    let x=Math.floor(Math.random() * dim[0]);
+    let y=Math.floor(Math.random() * dim[1]);
     if (arr[x][y]==0){
         arr[x][y]=Math.floor(Math.random()*3)+1
         i++;
     }
- }
-}
-console.log(1.000000000001,"A"+"B")
-const gpu = new GPU();
-
-const SIZE = 256;
-
-
-//gpu bound ising proposal using a checkorboard update rule since no neighbours lie on the
-//same checkerboard
-const choose_perm = gpu.createKernel(function(grid,bonds,JB,perm,ip,jp,nspins,s) {
+  }
+  }
+  console.log(1.000000000001,"A"+"B")
+  const gpu = new GPU.GPU();
+  
+  const SIZE = 256;
+  
+  
+  //gpu bound ising proposal using a checkorboard update rule since no neighbours lie on the
+  //same checkerboard
+  const choose_perm = gpu.createKernel(function(grid,bonds,JB,perm,ip,jp,nspins,s) {
     let i=this.thread.y*4+ip
     let j=this.thread.x*4+jp
-
+  
     let returnval=0;
     //choose the permutation
     let mutate = (Math.floor(Math.random() * 23))+1
@@ -88,15 +88,15 @@ const choose_perm = gpu.createKernel(function(grid,bonds,JB,perm,ip,jp,nspins,s)
     if(delta < 0 || 1.0-Math.random()<Math.exp(-JB*delta)){
     returnval=mutate
     }
-
+  
     return returnval;
-}, {
+  }, {
         output: [SIZE/4, SIZE/4],
         pipeline: true,
         //immutable: true
     });
-
-const finalize = gpu.createKernel(function(grid,updates,inverseperm,ip,jp,size) {
+  
+  const finalize = gpu.createKernel(function(grid,updates,inverseperm,ip,jp,size) {
     //my i and j index
     let i=this.thread.y
     let j=this.thread.x
@@ -136,21 +136,21 @@ const finalize = gpu.createKernel(function(grid,updates,inverseperm,ip,jp,size) 
     let retj=(j+joff-myjoff+size)%size
     //this is the one that got moved into grid[i][j] in chooseperm
     return grid[reti][retj];
-}, {
+  }, {
         output: [SIZE, SIZE],
         pipeline: true,
         immutable: true
     });
-
-console.log(0>>1,0%2)//0 0
-console.log(1>>1,1%2)//0 1
-console.log(2>>1,2%2)//1 0
-console.log(3>>1,3%2)//1 1
-
-
-//gpu bound ising proposal using a checkorboard update rule since no neighbours lie on the
-//same checkerboard
-const ProposeOLD = gpu.createKernel(function(grid,bonds,JB,mew,parity,nspins,size) {
+  
+  console.log(0>>1,0%2)//0 0
+  console.log(1>>1,1%2)//0 1
+  console.log(2>>1,2%2)//1 0
+  console.log(3>>1,3%2)//1 1
+  
+  
+  //gpu bound ising proposal using a checkorboard update rule since no neighbours lie on the
+  //same checkerboard
+  const ProposeOLD = gpu.createKernel(function(grid,bonds,JB,mew,parity,nspins,size) {
     let i=this.thread.y
     let j=this.thread.x
     let s=grid[i][j];
@@ -178,35 +178,35 @@ const ProposeOLD = gpu.createKernel(function(grid,bonds,JB,mew,parity,nspins,siz
         s=s2
         }
     }
-
+  
     return s;
-}, {
+  }, {
         output: [SIZE, SIZE],
         pipeline: true,
         immutable: true
     });
-
-const getval = gpu.createKernel(function(a) {
-return a[this.thread.y][this.thread.x];
-}).setOutput([SIZE, SIZE])
-
-
-
-
-function setpixels(ctx,grid){
+  
+  const getval = gpu.createKernel(function(a) {
+  return a[this.thread.y][this.thread.x];
+  }).setOutput([SIZE, SIZE])
+  
+  
+  
+  
+  function setpixels(ctx,grid){
     var h = ctx.canvas.height;
     var w = ctx.canvas.width;
     //console.log(h/grid.length)
-    scale=h/grid.length
+    let scale=h/grid.length
     var imgData = ctx.getImageData(0, 0, w, h);
     var data = imgData.data;  // the array of RGBA values
     //console.log(data.length)
     for(var s = 0; s < data.length; s+=4) {
-        x=Math.floor(s/4/w/scale);
-        y=Math.floor(((s/4)%w)/scale)
+        let x=Math.floor(s/4/w/scale);
+        let y=Math.floor(((s/4)%w)/scale)
         //s = 4 * x * w + 4 * y    probably
         
-        colour= COLOURS[grid[x][y]]
+        let colour= COLOURS[grid[x][y]]
         
         data[s] =     colour[0];
         data[s + 1] = colour[1];
@@ -214,126 +214,127 @@ function setpixels(ctx,grid){
         data[s + 3] = 255;  // fully opaque
     }
     ctx.putImageData(imgData, 0, 0);
-}
-
-
-const $ = q => document.getElementById(q);
-
-const NSPINS=4
-
-permutations = []
-inversepermutations = []
-for (var i=0; i<4; i++){
-for (var j=(i+1)%4;j!=i;j=(j+1)%4){
-for (var k=(i+1)%4;k!=i;k=(k+1)%4){
-for (var l=(i+1)%4;l!=i;l=(l+1)%4){    
+  }
+  
+  
+  const $ = q => document.getElementById(q);
+  
+  const NSPINS=4
+  
+  let permutations = []
+  let inversepermutations = []
+  for (var i=0; i<4; i++){
+  for (var j=(i+1)%4;j!=i;j=(j+1)%4){
+  for (var k=(i+1)%4;k!=i;k=(k+1)%4){
+  for (var l=(i+1)%4;l!=i;l=(l+1)%4){    
     if (j!=k && k!=l && l!=j){
         permutations.push([i,j,k,l])
         inversepermutations.push([0,0,0,0])
     }
-}
-}
-}
-}
-
-
-for (var idx=0;idx<24;idx++){
-for (var i=0;i<4;i++){
-inversepermutations[idx][permutations[idx][i]]=i
-}
-}
-console.log(permutations)
-console.log(inversepermutations)
-
-const toconstperm = gpu.createKernel(function(a) {
-return a[this.thread.y][this.thread.x];
+  }
+  }
+  }
+  }
+  
+  
+  for (var idx=0;idx<24;idx++){
+  for (var i=0;i<4;i++){
+  inversepermutations[idx][permutations[idx][i]]=i
+  }
+  }
+  console.log(permutations)
+  console.log(inversepermutations)
+  
+  const toconstperm = gpu.createKernel(function(a) {
+  return a[this.thread.y][this.thread.x];
     },{ output: [24, 4],
         pipeline: true,
         immutable: true})
-
-const PERM = permutations//toconstperm(permutations)
-const INVPERM= inversepermutations//toconstperm(inversepermutations)
-
-const random_new_uniform = gpu.createKernel(function(){
+  
+  const PERM = permutations//toconstperm(permutations)
+  const INVPERM= inversepermutations//toconstperm(inversepermutations)
+  
+  const random_new_uniform = gpu.createKernel(function(){
     return -Math.random()
-}, {
+  }, {
         output: [NSPINS, NSPINS],
         pipeline: true,
         //immutable: true
     });
-
-const make_symmetric = gpu.createKernel(function(arr){
+  
+  const make_symmetric = gpu.createKernel(function(arr){
     let i=this.thread.y
     let j=this.thread.x
     return i>j? arr[i][j]:arr[j][i]
-}, {
+  }, {
         output: [NSPINS, NSPINS],
         pipeline: true,
         //immutable: true
-});
-
-const outputinter = gpu.createKernel(function(a) {
-return a[this.thread.y][this.thread.x];
-}).setOutput([NSPINS, NSPINS])
-
-
-function setbonds(){
-    sv=["A","B","C","D"]
-    newbonds=outputinter(bonds)
+  });
+  
+  const outputinter = gpu.createKernel(function(a) {
+  return a[this.thread.y][this.thread.x];
+  }).setOutput([NSPINS, NSPINS])
+  
+  
+  function setbonds(){
+    let sv=["A","B","C","D"]
+    let newbonds=outputinter(bonds)
         for (var i=0;i<4;i++){
             for (var j=0;j<=i;j++){
             newbonds[i][j]=parseFloat($(sv[i]+sv[j]).value)
             }
         }
     make_symmetric(newbonds)
-}
-
-function setbondstext(){
-    sv=["A","B","C","D"]
-    newbonds=outputinter(bonds)
+  }
+  
+  function setbondstext(){
+    let sv=["A","B","C","D"]
+    let newbonds=outputinter(bonds)
         for (var i=0;i<4;i++){
             for (var j=0;j<=i;j++){
             $(sv[i]+sv[j]).value = Math.round(newbonds[i][j]*100)/100
             }
         }
-}
-
-
-let bonds = make_symmetric([[-1,0,0,0],[0,0,0,0],[0,-1,0,0],[1,0,0,-1]])//(random_new_uniform())
-setbondstext()
-const COLOURS=[[255,0,0],[0,255,0],[0,0,255],[255,50,255]]
-console.log(outputinter(bonds))
-
-var mew=[]
-for (var j=0; j<NSPINS;j++){
+  }
+  
+  
+  let bonds = make_symmetric([[-1,0,0,0],[0,0,0,0],[0,-1,0,0],[1,0,0,-1]])//(random_new_uniform())
+  setbondstext()
+  const COLOURS=[[255,0,0],[0,255,0],[0,0,255],[255,50,255]]
+  console.log(outputinter(bonds))
+  
+  var mew=[]
+  for (var j=0; j<NSPINS;j++){
     mew.push(0);
-}
-
-const TESTARRCONST = gpu.createKernel(function() {
-let b = [0,1]
-return b[this.thread.y%2]
-}).setOutput([4, 4])
-
-console.log(TESTARRCONST())
-
-var kT = 2.269
-//var mew = 0.0;
-var toggle=false;
-var kval1=100;
-var kval2=100;
-var N = 0;
-var stepsperframe=1;
-var startTime = 0;
-var on = false;
-
-
-
-
-function rescale (S1,S2,S3,fill) {
-    v1=parseFloat($(S1).value)
-    v2=parseFloat($(S2).value)
-    v3=parseFloat($(S3).value)
-    sum=v1+v2+v3
+  }
+  
+  const TESTARRCONST = gpu.createKernel(function() {
+  let b = [0,1]
+  return b[this.thread.y%2]
+  }).setOutput([4, 4])
+  
+  console.log(TESTARRCONST())
+  
+  var kT = 2.269
+  //var mew = 0.0;
+  var toggle=false;
+  var kval1=100;
+  var kval2=100;
+  var N = 0;
+  var stepsperframe=1;
+  var startTime = 0;
+  var on = false;
+  var grid;
+  var grid2;
+  
+  
+  
+  function rescale (S1,S2,S3,fill) {
+    let v1=parseFloat($(S1).value)
+    let v2=parseFloat($(S2).value)
+    let v3=parseFloat($(S3).value)
+    let sum=v1+v2+v3
     if (sum==0){
     $(S1).value=$(S3).value=$(S2).value=fill/3
     }
@@ -353,27 +354,27 @@ function rescale (S1,S2,S3,fill) {
     
     rebalance()
     setpixels(ctx,grid);
-}
-$("A").oninput = function() {
- $('Atxt').innerHTML = this.value
- rescale('B','C','D',100-parseFloat(this.value))
-}
-$("B").oninput = function() {
- $('Btxt').innerHTML = this.value
- rescale('A','C','D',100-parseFloat(this.value))
-}
-$("C").oninput = function() {
- $('Ctxt').innerHTML = this.value
- rescale('B','A','D',100-parseFloat(this.value))
-}
-$("D").oninput = function() {
- $('Dtxt').innerHTML = this.value
- rescale('B','C','A',100-parseFloat(this.value))
-}
-
-
-
-$("steps").oninput = function() {
+  }
+  $("A").oninput = function() {
+  $('Atxt').innerHTML = this.value
+  rescale('B','C','D',100-parseFloat(this.value))
+  }
+  $("B").oninput = function() {
+  $('Btxt').innerHTML = this.value
+  rescale('A','C','D',100-parseFloat(this.value))
+  }
+  $("C").oninput = function() {
+  $('Ctxt').innerHTML = this.value
+  rescale('B','A','D',100-parseFloat(this.value))
+  }
+  $("D").oninput = function() {
+  $('Dtxt').innerHTML = this.value
+  rescale('B','C','A',100-parseFloat(this.value))
+  }
+  
+  
+  
+  $("steps").oninput = function() {
   stepsperframe=Math.pow(4,this.value)*2;
   if (this.value>=0){
   $('stepstext').innerHTML = Math.pow(4,this.value);
@@ -381,8 +382,8 @@ $("steps").oninput = function() {
   else{
   $('stepstext').innerHTML = "1/"+Math.pow(4,-this.value);
   }
-}
-$('stopbutton').addEventListener("click", function(){
+  }
+  $('stopbutton').addEventListener("click", function(){
     on = !on;
     $('stoptext').innerHTML=on? 'Stop':'Start';
     if (on){
@@ -393,62 +394,62 @@ $('stopbutton').addEventListener("click", function(){
         console.log(count_type(0),count_type(1),count_type(2),count_type(3))
         window.requestAnimationFrame(run);
     }
-})
-
-function count_type(type){
-    sum=0
+  })
+  
+  function count_type(type){
+    let sum=0
     for(var i=0;i<SIZE;i++){
         for(var j=0;j<SIZE;j++){
             if(grid[i][j]==type){
             sum++
             }
-
+  
         }
     }
     return sum
-}
-
-//only works with 4 types right now
-function positions(){
-    pos=[[],[],[],[]];
+  }
+  
+  //only works with 4 types right now
+  function positions(){
+    let pos=[[],[],[],[]];
     for(var i=0;i<SIZE;i++){
         for(var j=0;j<SIZE;j++){
             pos[grid[i][j]].push(i*SIZE+j)
         }
     }
     return pos
-}
-
-function rebalance(){
-    pos=positions()
-    v0=parseFloat($('A').value) 
-    v1=parseFloat($('B').value)
-    v2=parseFloat($('C').value)
-    v3=parseFloat($('D').value)
-    tot=v0+v1+v2+v3
+  }
+  
+  function rebalance(){
+    let pos=positions()
+    let v0=parseFloat($('A').value) 
+    let v1=parseFloat($('B').value)
+    let v2=parseFloat($('C').value)
+    let v3=parseFloat($('D').value)
+    let tot=v0+v1+v2+v3
     if (tot>0){
-        diffs=[v0/tot*SIZE*SIZE-pos[0].length,v1/tot*SIZE*SIZE-pos[1].length
+        let diffs=[v0/tot*SIZE*SIZE-pos[0].length,v1/tot*SIZE*SIZE-pos[1].length
               ,v2/tot*SIZE*SIZE-pos[2].length,v3/tot*SIZE*SIZE-pos[3].length]   
-        nums=[]
+        let nums=[]
         for(var i=0;i<4;i++){nums.push(diffs[i]>0?diffs[i]:0)}
         //console.log(diffs,nums)
         //console.log(nums[0]+nums[1]+nums[2]+nums[3])
         //fast until here 
         
-        idx=0
+        let idx=0
         for(var i=0;i<4;i++){
             
             for (var j=0;j<-diffs[i];j++){
                 idx+=1
-                index= Math.floor(Math.random()*(pos[i].length-j))
+                let index= Math.floor(Math.random()*(pos[i].length-j))
                 //can also use pos[i].pop()
-                tmp = pos[i][pos[i].length-j-1]
-                val=pos[i][index]
+                let tmp = pos[i][pos[i].length-j-1]
+                let val=pos[i][index]
                 pos[i][index]=tmp
-
-                choice= Math.random()
-                sum=nums[0]+nums[1]+nums[2]+nums[3]
-                x0=0
+  
+                let choice= Math.random()
+                let sum=nums[0]+nums[1]+nums[2]+nums[3]
+                let x0=0
                 for (var k=0;k<4 && sum>0;k++){
                     x0+=nums[k]/sum
                     if (choice<x0){
@@ -461,25 +462,25 @@ function rebalance(){
         }
         //console.log(idx)
     }
-}
-
-function setlevels(){
+  }
+  
+  function setlevels(){
     if (!on||true){
         grid = zeros([SIZE,SIZE]);
-        v0=parseFloat($('A').value) 
-        v1=parseFloat($('B').value)
-        v2=parseFloat($('C').value)
-        v3=parseFloat($('D').value)
-        tot=v0+v1+v2+v3
+        let v0=parseFloat($('A').value) 
+        let v1=parseFloat($('B').value)
+        let v2=parseFloat($('C').value)
+        let v3=parseFloat($('D').value)
+        let tot=v0+v1+v2+v3
         if (tot>0){
             //console.log(tot)
-            nums=[v0/tot*SIZE*SIZE,v1/tot*SIZE*SIZE,v2/tot*SIZE*SIZE,v3/tot*SIZE*SIZE]
+            let nums=[v0/tot*SIZE*SIZE,v1/tot*SIZE*SIZE,v2/tot*SIZE*SIZE,v3/tot*SIZE*SIZE]
             //console.log(nums)
             for(var i=0;i<SIZE;i++){
                 for(var j=0;j<SIZE;j++){
-                    choice= Math.random()
-                    sum=nums[0]+nums[1]+nums[2]+nums[3]
-                    x0=0
+                    let choice= Math.random()
+                    let sum=nums[0]+nums[1]+nums[2]+nums[3]
+                    let x0=0
                     for (var k=0;k<4 && sum>0;k++){
                         x0+=nums[k]/sum
                         if (choice<x0){
@@ -493,28 +494,28 @@ function setlevels(){
             }
         }
     }
-}
-
-//4 spins is hard coded into here right now
-$('applybutton').addEventListener("click", function(){
+  }
+  
+  //4 spins is hard coded into here right now
+  $('applybutton').addEventListener("click", function(){
         setlevels()
         setbonds()
         setpixels(ctx,grid)
     
-})
+  })
     
-
-$("kT").oninput = function() {
-  x = Math.pow((this.value/32),3)
+  
+  $("kT").oninput = function() {
+  let x = Math.pow((this.value/32),3)
   kT = Math.exp(x);
   $('kTtext').innerHTML = kT.toFixed(3);
   //console.log(kT);
-}
-
-
-function run(){
-    ip=Math.floor(Math.random()*4)
-    jp=Math.floor(Math.random()*4)
+  }
+  
+  
+  function run(){
+    let ip=Math.floor(Math.random()*4)
+    let jp=Math.floor(Math.random()*4)
     choose_perm(grid,bonds,1/kT,PERM,ip,jp,NSPINS,SIZE)
     grid2 = finalize(grid,choices,PERM,ip,jp,SIZE) 
     
@@ -562,30 +563,31 @@ function run(){
     if (on){
         window.requestAnimationFrame(run);
     }
-}
-
-INDX=0
-grid = zeros([SIZE,SIZE]);
-setlevels()
-//random_ones([SIZE,SIZE],grid,SIZE*SIZE*1/2)
-stepsperframe=Math.pow(2,-1)*2;
-$('stepstext').innerHTML = "1/"+Math.pow(4,1);
-var RGBData;
-var NumSpecies=0;
-//random_ones([128,128],grid,2000)
-
-choices = choose_perm(grid,bonds,1/kT,PERM,0,0,NSPINS,SIZE)
-const getval2 = gpu.createKernel(function(a) {
-return a[this.thread.y][this.thread.x];
-}).setOutput([SIZE/4, SIZE/4])
-
-console.log(getval2(choices))
-
-var canvas = document.getElementById('grid');
-console.log(canvas);
-ctx = canvas.getContext("2d");
-
-setlevels()
-setpixels(ctx,grid)
-
-//window.requestAnimationFrame(run)
+  }
+  
+  let INDX=0
+  grid = zeros([SIZE,SIZE]);
+  setlevels()
+  //random_ones([SIZE,SIZE],grid,SIZE*SIZE*1/2)
+  stepsperframe=Math.pow(2,-1)*2;
+  $('stepstext').innerHTML = "1/"+Math.pow(4,1);
+  var RGBData;
+  var NumSpecies=0;
+  //random_ones([128,128],grid,2000)
+  
+  let choices = choose_perm(grid,bonds,1/kT,PERM,0,0,NSPINS,SIZE)
+  const getval2 = gpu.createKernel(function(a) {
+  return a[this.thread.y][this.thread.x];
+  }).setOutput([SIZE/4, SIZE/4])
+  
+  console.log(getval2(choices))
+  
+  var canvas = document.getElementById('grid');
+  console.log(canvas);
+  let ctx = canvas.getContext("2d");
+  
+  setlevels()
+  setpixels(ctx,grid)
+  
+  //window.requestAnimationFrame(run)
+  
