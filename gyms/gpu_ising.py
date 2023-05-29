@@ -1,9 +1,10 @@
 import numpy as np
 from numba import jit,cuda
 from numba.cuda.random import create_xoroshiro128p_states, xoroshiro128p_uniform_float32
-from matplotlib import pyplot as plt
 import math,time
 from threading import Thread,Lock
+
+from BaseSim import TwoDSim
 
 
 @cuda.jit
@@ -68,6 +69,25 @@ def continuous_ising(grid,active,steps,JB,mew,rng_states,size):
         #make sure the unlocking is visible to the other blocks
 
 
+@jit(nopython=True)
+def cpu_ising(grid,steps,JB,mew,size):
+    n_steps = int(size**2*steps/4)
+    for x in range(n_steps):
+        i=np.random.randint(size)
+        j=np.random.randint(size)
+        #check the spin of each neighbour
+        sum_=grid[i-1][j]+grid[i+1-size][j]+grid[i][j-1]+grid[i][j+1-size]
+        delta = 2.0 * (grid[i][j]*2-1)*(2*sum_-4+mew)
+        #get a random number for our boltzmann update
+        n = np.random.random()  
+        #lock is our decision to perform the ising update according to the boltzmann distribution
+        lock=int(1-n < math.exp(-JB*delta))
+        #update site accordingly
+        grid[i][j]+=lock*(1-2*grid[i][j])
+
+    
+        
+        
 """
 # Helper Functions for a potential ising gym
 These collectively take the grid and output image observations.
@@ -123,16 +143,16 @@ def toimg(grid,outarr,store,sin,sout):
             for b in range(scale):
                 sum_+=grid[(I+a)%sin][(J+b)%sin]
                 
-        outarr[0][i][j]=int(255*sum_/scale**2)    
+        outarr[i][j][0]=int(255*sum_/scale**2)    
         
         idx= ((2*i)//sout)*2+(2*j)//sout
-        outarr[1][i][j]=int(store[2+idx])
+        outarr[i][j][1]=int(store[2+idx])
         #store should contain:
         #E,M,Time,M/cell,Temp,Mew,target E/cell, target M/cell in that order.
-        outarr[2][i][j]=int(store[6+(2*j)//sout])
+        outarr[i][j][2]=int(store[6+(2*j)//sout])
 
-class Ising(Thread):
-    def __init__(self, N):
+class Ising(TwoDSim):
+    def __init__(self, N, device = "cuda" ):
         #setup the lattice and helper data structures
         self.N=N
         self.grid=np.asarray(np.random.random([N,N])>0.5,dtype=np.int64)
@@ -143,27 +163,32 @@ class Ising(Thread):
         self.blockalt=(min(blockspergrid_x//2,8), min(blockspergrid_y//2,8))
         self.isalive=True
         self.rng_states = create_xoroshiro128p_states(self.grid.size, seed=1)
-        self.grid_global_mem = cuda.to_device(self.grid)
+        self.grid_cuda = cuda.to_device(self.grid)
         self.JB=5
         self.mew=0
-        self.rspeed=100
         self.act=cuda.to_device(np.zeros_like(self.grid,dtype=np.int32))
-        super(Ising, self).__init__()
-    def fps(self):
-        """Gives the number of updates performed in one second"""
-        iold = self.index
-        time.sleep(1)
-        return self.index-iold
-    def run(self):
-        """Run the ising updates on a thread"""
-        self.index=0
-        while self.isalive:
-            self.index+=1
-            if True:
-                continuous_ising[self.blockalt, (16,16)](self.grid_global_mem,self.act,50,self.JB,self.mew,self.rng_states,self.N)
-                #time.sleep(0.01)
-            else:
-                fast_ising[self.blockspergrid, self.threadsperblock](self.grid_global_mem,self.JB,self.mew,0,self.rng_states,self.N)
-                fast_ising[self.blockspergrid, self.threadsperblock](self.grid_global_mem,self.JB,self.mew,1,self.rng_states,self.N)
-    def step(self,nsteps=50):
-        continuous_ising[self.blockalt, (16,16)](self.grid_global_mem,self.act,nsteps,self.JB,self.mew,self.rng_states,self.N)
+        super(Ising, self).__init__(device)
+
+    def step(self,nsteps=1):
+        if self.device=="cuda":
+            continuous_ising[self.blockalt, (16,16)](self.grid_cuda,self.act,nsteps,self.JB,self.mew,self.rng_states,self.N)
+        else:
+            cpu_ising(self.grid, nsteps, self.JB, self.mew, self.N)
+
+        super().step()
+    def get_state(self):
+        if self.device=="cuda":
+            return self.grid_cuda.copy_to_host()
+        else:
+            return self.grid.copy()
+            
+    def to(self,device):
+        if "cpu" in device and self.device == "cuda":
+            self.device="cpu"
+            self.grid[:] = self.grid_cuda.copy_to_host()
+        elif "cuda" in device and self.device == "cpu":
+            self.device="cuda"
+            self.grid_cuda[:] = cuda.to_device(self.grid)
+        
+        
+        
